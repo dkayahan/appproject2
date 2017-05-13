@@ -65,7 +65,7 @@ function download(text, name, type) {
 	a.download = name;
 }
 
-var authors; //global authors object, all data will be read into this object
+
 function init(){
   	document.getElementById('authorFiles').addEventListener('change', function(event){
 		readFolder(event, function(response){ //folder is read
