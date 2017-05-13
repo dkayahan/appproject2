@@ -122,29 +122,70 @@ function setWordProbs(authors){
 		for(var word in authors[author]["wordProbs"]){
 			authors[author]["wordProbs"][word] /= authors[author].wordCount;
 		}
+		authors[author].getWordProb = function(word){ //Function to return word prob of author
+			if(typeof this.wordProbs[word] == "undefined" || this.wordProbs[word] == "")
+				return 0;
+			else
+				return parseFloat(this.wordProbs[word]);
+		}
 	}
+	
+
+}
+
+/**
+* Predict author of inputDocument
+*/
+function naiveBayes(inputDocument, authors){
+	var docTokenized = tokenizer(inputDocument.content);
+	var maxTotal = 0;
+	var maxAuthor = "";
+	for(var author in authors){
+		var total = 0;
+		for(var j=0; j<docTokenized.length; j++){ 
+			if(typeof docTokenized[j] == "undefined" || docTokenized[j] == "")
+				continue;
+			total += authors[author].getWordProb(docTokenized[j]);			
+		}
+		if(total >= maxTotal){
+			maxTotal = total;
+			maxAuthor = author;
+		}
+	}
+	inputDocument.predictedAuthor = maxAuthor;
+}
+
+function runNaiveTest(corpus, authors){
+	for(var i=0; i<corpus.test.length; i++){
+		naiveBayes(corpus.test[i], authors);
+	}
+
 }
 
 function init(){
-  	document.getElementById('authorFiles').addEventListener('change', function(event){
+	//If new folder is uploaded, regenerate model
+	document.getElementById('authorFiles').addEventListener('change', function(event){
 		readFolder(event, function(response){ //folder is read
 			//console.log("Uploaded folder is read: ", response);
 			var authors = splitTrainData(response);	
 			var corpus = getCorpus(authors);
 			console.log("Corpus: ", corpus);
 			download(JSON.stringify(corpus),"corpus.txt","text/plain", "downloadCorpus");
-			//localStorage.setItem("authors", JSON.stringify(authors));
-			setWordCounts(authors);
-			setWordProbs(authors)
-			download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
-			console.log("Authors:", authors);
+			localStorage.setItem("authors", JSON.stringify(authors)); //Save read data to localstorage for further use
+			init();
 		});
-	}, false);	
-	/*var authors = JSON.parse(localStorage.getItem("authors"));
+	}, false);
+
+	var authors = JSON.parse(localStorage.getItem("authors"));
+	var corpus = getCorpus(authors);
 	setWordCounts(authors);
 	setWordProbs(authors)
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
-	console.log("Authors by localstorage:", authors);*/
+	console.log("Authors: ", authors);
+	//runNaiveTest(corpus, authors);
+	console.log("Corpus: ", corpus);
+	naiveBayes(corpus.test[0], authors);
+	console.log(corpus.test[0]);
 	document.getElementById("result").innerHTML = "";
 }
 
