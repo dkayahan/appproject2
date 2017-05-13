@@ -24,6 +24,7 @@ function readFolder(event, callback){
 	for(var i=0; i<files.length; i++){
 		readFile(files[i], function(fileData){ //Read each file
 			var fileInfo = fileData.path.split("/"); //fileInfo[1] = author, fileInfo[2] = fileName
+			fileData.author = fileInfo[1];
 			if(typeof authors[fileInfo[1]] == "undefined")
 				authors[fileInfo[1]] = {train: new Array(), test: new Array()}; //set author
 			authors[fileInfo[1]].train.push(fileData); //Temporarly put all files of an author into train data
@@ -40,6 +41,7 @@ function readFolder(event, callback){
 * each author has %60 train data, %40 test data
 */
 function splitTrainData(authors){
+	var corpus = {train: new Array(), test: new Array()}; //Global train & test documents, collection of all authors
 	for(var author in authors){
 		var authorFiles = authors[author];
 		var testFilesCount = Math.floor(authorFiles.train.length*0.4); //Num of test files = 40% of all files of an author
@@ -47,9 +49,11 @@ function splitTrainData(authors){
 			var rand = Math.floor(Math.random()*authorFiles.train.length);
 			var selected = authors[author].train.splice(rand, 1); //Randomly selected document of author, put it to test data
 			authors[author].test.push(selected[0]);
-		}		
+		}
+		corpus.test = corpus.test.concat(authors[author].test);
+		corpus.train = corpus.train.concat(authors[author].train);				
 	}
-	return authors;
+	return corpus;
 }
 
 //Simple tokenizer; divide by spaces
@@ -72,7 +76,7 @@ function init(){
 			console.log("Uploaded folder is read: ", response);
 			//localStorage.setItem("authors", JSON.stringify(response));
 			var res = splitTrainData(response);	
-			console.log("Splitted into train& test result: ", res);
+			console.log("Corpus: ", res);
 			download(JSON.stringify(res),"ihi.txt","text/plain");
 		});
 	}, false);	
