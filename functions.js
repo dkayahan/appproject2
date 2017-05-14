@@ -4,11 +4,13 @@
 function readFile(file, callback){
 	var reader = new FileReader();
 	var fileData = {path: file.webkitRelativePath, content: null}
+	var replacements = {"ð":"ğ", "ý":"ı", "þ":"ş", "Ý":"İ","Þ":"Ş"};
 	reader.onloadend = function(event){
-		fileData.content = event.target.result;
+		fileData.content = event.target.result.toLowerCase().
+						       replace(/ý|þ|ð|Ý/g, function(char){ return replacements[char]});
         	callback(fileData);
 	};
-	reader.readAsText(file);
+	reader.readAsText(file, 'ISO-8859-15');
 }
 
 /**
@@ -22,6 +24,7 @@ function readFolder(event, callback){
 	var files = event.target.files;
 	var allDone = files.length; //trigger callback function when all files are read
 	for(var i=0; i<files.length; i++){
+	//var i = 0;
 		readFile(files[i], function(fileData){ //Read each file
 			var fileInfo = fileData.path.split("/"); //fileInfo[1] = author, fileInfo[2] = fileName
 			fileData.author = fileInfo[1];
