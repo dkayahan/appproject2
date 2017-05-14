@@ -201,14 +201,16 @@ function getFeatureSet(vocabulary, authors, dataset){
 	for(var i=0; i<dataset.length; i++){
 		var docTokenized = tokenizer(dataset[i].content);
 		var authorId = authors.indexOf(dataset[i].author);
+		result += authorId;
 		for(var j=0; j<docTokenized.length; j++){
 			if(typeof docTokenized[j] == "undefined" || docTokenized[j] == "")
 				continue;
 			var vocId = vocabulary[docTokenized[j]];
 			if(typeof vocId !== "undefined"){ //Ignore if token is not in vocabulary
-				result += authorId + ":" + vocId + ":1\n";
+				result += " " + vocId + ":1";
 			}
 		}
+		result += "\n\n";
 	}
 	return result;
 }
