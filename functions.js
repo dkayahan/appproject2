@@ -202,14 +202,18 @@ function getFeatureSet(vocabulary, authors, dataset){
 		var docTokenized = tokenizer(dataset[i].content);
 		var authorId = authors.indexOf(dataset[i].author);
 		result += authorId;
+		var tmpFeats = new Object();
 		for(var j=0; j<docTokenized.length; j++){
 			if(typeof docTokenized[j] == "undefined" || docTokenized[j] == "")
 				continue;
 			var vocId = vocabulary[docTokenized[j]];
 			if(typeof vocId !== "undefined"){ //Ignore if token is not in vocabulary
-				result += " " + vocId + ":1";
+				//result += " " + vocId + ":1";
+				tmpFeats[vocId] = 1;
 			}
 		}
+		for(var f in tmpFeats)
+			result += " " + f + ":1";
 		result += "\n\n";
 	}
 	return result;
@@ -251,7 +255,7 @@ function init(){
 
 
 
-	runNaiveTest(corpus, authors);
+	//runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
 	naiveBayes(corpus.test[0], authors);
 	console.log(corpus.test[0]);
