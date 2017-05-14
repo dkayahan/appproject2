@@ -99,7 +99,7 @@ function download(text, name, type, id){
 function setWordCounts(authors){
 	var result = new Object();
 	//set vocabulary
-	var tmpVoc = new Object();
+	var vocObj = new Object();
 	//set vocabulary
 
 	for(var author in authors){
@@ -116,17 +116,24 @@ function setWordCounts(authors){
 				else
 					authors[author]["wordProbs"][docTokenized[j]]++;
 				authors[author].totalWordCount++;
-				tmpVoc[docTokenized[j]] = 1; //Save unique word into vocabulary			
+			
+				//set vocabulary
+				vocObj[docTokenized[j]] = 1; //Save unique word into vocabulary
+				//set vocabulary			
 			}
 		}
 		authors[author].uniqueWordCount = Object.keys(authors[author]["wordProbs"]).length;		
 	}
 
 	//set vocabulary
-	var vocabulary = new Array("XXXXXXXX"); //Vocabulary starts from 1st index
-	for(var voc in tmpVoc)
-		vocabulary.push(voc); //Save into vocabulary array
-	return vocabulary;	
+	var vocArray = new Array(); 
+	var vocId = 1;//Start from 1. index
+	for(var voc in vocObj){
+		vocObj[voc] = vocId;
+		vocArray[vocId] = voc;
+		vocId++;
+	}	
+	return {vocArray: vocArray, vocObj: vocObj};	
 	//set vocabulary
 }
 
@@ -197,8 +204,8 @@ function getFeatureSet(vocabulary, authors, dataset){
 		for(var j=0; j<docTokenized.length; j++){
 			if(typeof docTokenized[j] == "undefined" || docTokenized[j] == "")
 				continue;
-			var vocId = vocabulary.indexOf(docTokenized[j]);
-			if(vocId !== -1){ //Ignore if token is not in vocabulary
+			var vocId = vocabulary[docTokenized[j]];
+			if(typeof vocId !== "undefined"){ //Ignore if token is not in vocabulary
 				result += authorId + ":" + vocId + ":1\n";
 			}
 		}
@@ -224,22 +231,24 @@ function init(){
 	var authors = JSON.parse(localStorage.getItem("authors"));
 	var corpus = getCorpus(authors);
 	vocabulary = setWordCounts(authors);
-	console.log(vocabulary.length);
-	console.log(vocabulary.indexOf("dilek"));
+	console.log(vocabulary.vocArray.length);
 
 	setWordProbs(authors)
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
-	download(JSON.stringify(vocabulary),"vocabulary.txt","text/plain", "downloadVocabulary");
+	download(JSON.stringify(vocabulary.vocArray),"vocabulary.txt","text/plain", "downloadVocabulary");
+	download(JSON.stringify(corpus.authorList),"authorList.txt","text/plain", "downloadAuthorList");
+
 	console.log("Authors: ", authors);
 	
 	
-	var result = getFeatureSet(vocabulary, corpus.authorList, corpus.test);	
+	var result = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.test);	
 	download(result, "testFeats.txt","text/plain", "downloadTestFeat");
 	
-/* Get features of train	
-	var result = getFeatureSet(vocabulary, corpus.authorList, corpus.train);	
-	download(result, "trainFeats.txt","text/plain", "downloadTrainFeat");
-*/
+	var result2 = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.train);	
+	download(result2, "trainFeats.txt","text/plain", "downloadTrainFeat");
+
+
+
 	//runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
 	naiveBayes(corpus.test[0], authors);
