@@ -94,9 +94,12 @@ function download(text, name, type, id){
 * Set word probabilities & word counts to given authors object
 * authors[author][wordProbs][word] = how many times "word" is used by "author"
 * authors[author].wordCount = number of distinct words used by "author"
+* Set global vocabulary on authors according to words in training dataset
 */
-function setWordCounts(authors){
+function setWordCounts(authors, corpus){
 	var result = new Object();
+	//set global vocabulary
+	vocabulary = new Object();
 	for(var author in authors){
 		authors[author].totalWordCount = 0;
 		if(typeof authors[author]["wordProbs"] == "undefined")
@@ -111,10 +114,14 @@ function setWordCounts(authors){
 				else
 					authors[author]["wordProbs"][docTokenized[j]]++;
 				authors[author].totalWordCount++;
+				vocabulary[docTokenized[j]] = 1; //Set occurence of vocabulary
 			}
 		}
 		authors[author].uniqueWordCount = Object.keys(authors[author]["wordProbs"]).length;		
 	}
+	corpus.vocabulary = new Array();
+	for(var voc in vocabulary)
+		corpus.vocabulary.push(voc);
 }
 
 /**
@@ -171,6 +178,7 @@ function runNaiveTest(corpus, authors){
 
 }
 
+
 function init(){
 	//If new folder is uploaded, regenerate model
 	document.getElementById('authorFiles').addEventListener('change', function(event){
@@ -187,11 +195,12 @@ function init(){
 
 	var authors = JSON.parse(localStorage.getItem("authors"));
 	var corpus = getCorpus(authors);
-	setWordCounts(authors);
+	setWordCounts(authors, corpus);
 	setWordProbs(authors)
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
+	download(JSON.stringify(corpus.vocabulary),"vocabulary.txt","text/plain", "downloadVocabulary");
 	console.log("Authors: ", authors);
-	runNaiveTest(corpus, authors);
+	//runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
 	naiveBayes(corpus.test[0], authors);
 	console.log(corpus.test[0]);
