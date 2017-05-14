@@ -214,7 +214,7 @@ function getFeatureSet(vocabulary, authors, dataset){
 		}
 		for(var f in tmpFeats)
 			result += " " + f + ":1";
-		result += "\n\n";
+		result += "\n";
 	}
 	return result;
 }
