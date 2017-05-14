@@ -142,14 +142,14 @@ function setWordCounts(authors){
 * Word prob = count of word w in all docs of author a / count of all words in all docs of author a
 * One additive laplace smoothing
 */
-function setWordProbs(authors){
+function setWordProbs(authors, vocLength){
 	for(var author in authors){
 		for(var word in authors[author]["wordProbs"]){
-			authors[author]["wordProbs"][word] = (authors[author]["wordProbs"][word] + 1) / (authors[author].totalWordCount + vocabulary.count);
+			authors[author]["wordProbs"][word] = (authors[author]["wordProbs"][word] + 1) / (authors[author].totalWordCount + vocLength);
 		}
 		authors[author].getWordProb = function(word){ //Function to return word prob of author
 			if(typeof this.wordProbs[word] == "undefined" || this.wordProbs[word] == "")
-				return 1/(this.totalWordCount + vocabulary.count);
+				return 1/(this.totalWordCount + vocLength);
 			else
 				return parseFloat(this.wordProbs[word]);
 		}
@@ -232,10 +232,10 @@ function init(){
 
 	var authors = JSON.parse(localStorage.getItem("authors"));
 	var corpus = getCorpus(authors);
-	vocabulary = setWordCounts(authors);
+	var vocabulary = setWordCounts(authors);
 	console.log(vocabulary.vocArray.length);
 
-	setWordProbs(authors)
+	setWordProbs(authors, vocabulary.vocArray.length);
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
 	download(JSON.stringify(vocabulary.vocArray),"vocabulary.txt","text/plain", "downloadVocabulary");
 	download(JSON.stringify(corpus.authorList),"authorList.txt","text/plain", "downloadAuthorList");
@@ -251,7 +251,7 @@ function init(){
 
 
 
-	//runNaiveTest(corpus, authors);
+	runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
 	naiveBayes(corpus.test[0], authors);
 	console.log(corpus.test[0]);
