@@ -94,12 +94,18 @@ function download(text, name, type, id){
 * Set word probabilities & word counts to given authors object
 * authors[author][wordProbs][word] = how many times "word" is used by "author"
 * authors[author].wordCount = number of distinct words used by "author"
-* Set global vocabulary on authors according to words in training dataset
+* Returns global vocabulary on authors according to words in training dataset
 */
-function setWordCounts(authors, corpus){
+function setWordCounts(authors){
 	var result = new Object();
-	//set global vocabulary
-	vocabulary = new Object();
+	//set vocabulary
+	var vocabulary = {words: new Object(), isAvail: function(word){
+		if(typeof this.words[word] !== "undefined")
+			return true;
+		return false;
+	}, count: 0};
+	//set vocabulary
+
 	for(var author in authors){
 		authors[author].totalWordCount = 0;
 		if(typeof authors[author]["wordProbs"] == "undefined")
@@ -114,14 +120,16 @@ function setWordCounts(authors, corpus){
 				else
 					authors[author]["wordProbs"][docTokenized[j]]++;
 				authors[author].totalWordCount++;
-				vocabulary[docTokenized[j]] = 1; //Set occurence of vocabulary
+				vocabulary.words[docTokenized[j]] = 1; //Set occurence of vocabulary
 			}
 		}
 		authors[author].uniqueWordCount = Object.keys(authors[author]["wordProbs"]).length;		
 	}
-	corpus.vocabulary = new Array();
-	for(var voc in vocabulary)
-		corpus.vocabulary.push(voc);
+
+	//set vocabulary
+	vocabulary.count = Object.keys(vocabulary.words).length;
+	return vocabulary;	
+	//set vocabulary
 }
 
 /**
@@ -195,10 +203,12 @@ function init(){
 
 	var authors = JSON.parse(localStorage.getItem("authors"));
 	var corpus = getCorpus(authors);
-	setWordCounts(authors, corpus);
+	vocabulary = setWordCounts(authors);
+	console.log(vocabulary.count);
+	console.log(vocabulary.isAvail("dilik"));
 	setWordProbs(authors)
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
-	download(JSON.stringify(corpus.vocabulary),"vocabulary.txt","text/plain", "downloadVocabulary");
+	download(JSON.stringify(vocabulary),"vocabulary.txt","text/plain", "downloadVocabulary");
 	console.log("Authors: ", authors);
 	//runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
