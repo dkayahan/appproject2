@@ -95,6 +95,7 @@ function download(text, name, type, id){
 function setWordCounts(authors){
 	var result = new Object();
 	for(var author in authors){
+		authors[author].totalWordCount = 0;
 		if(typeof authors[author]["wordProbs"] == "undefined")
 			authors[author]["wordProbs"] = new Object();
 		for(var i=0; i<authors[author].train.length; i++){ //handle all docs of author
@@ -106,25 +107,26 @@ function setWordCounts(authors){
 					authors[author]["wordProbs"][docTokenized[j]] = 1;
 				else
 					authors[author]["wordProbs"][docTokenized[j]]++;
+				authors[author].totalWordCount++;
 			}
 		}
-		authors[author].wordCount = Object.keys(authors[author]["wordProbs"]).length;		
+		authors[author].uniqueWordCount = Object.keys(authors[author]["wordProbs"]).length;		
 	}
 }
 
 /**
 * Update word counts with word probabilities
 * Word prob = count of word w in all docs of author a / count of all words in all docs of author a
-* TODO: Implement Laplace smoothing!!!!!!
+* One additive laplace smoothing
 */
 function setWordProbs(authors){
 	for(var author in authors){
 		for(var word in authors[author]["wordProbs"]){
-			authors[author]["wordProbs"][word] /= authors[author].wordCount;
+			authors[author]["wordProbs"][word] = (authors[author]["wordProbs"][word] + 1) / (authors[author].totalWordCount + 10);
 		}
 		authors[author].getWordProb = function(word){ //Function to return word prob of author
 			if(typeof this.wordProbs[word] == "undefined" || this.wordProbs[word] == "")
-				return 0;
+				return 1/(this.totalWordCount + 10);
 			else
 				return parseFloat(this.wordProbs[word]);
 		}
@@ -156,9 +158,13 @@ function naiveBayes(inputDocument, authors){
 }
 
 function runNaiveTest(corpus, authors){
+	var suc = 0;
 	for(var i=0; i<corpus.test.length; i++){
 		naiveBayes(corpus.test[i], authors);
+		if(corpus.test[i].author == corpus.test[i].predictedAuthor)
+			suc++;
 	}
+	console.log("Num of accurate prediction: ",suc);
 
 }
 
@@ -182,7 +188,7 @@ function init(){
 	setWordProbs(authors)
 	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
 	console.log("Authors: ", authors);
-	//runNaiveTest(corpus, authors);
+	runNaiveTest(corpus, authors);
 	console.log("Corpus: ", corpus);
 	naiveBayes(corpus.test[0], authors);
 	console.log(corpus.test[0]);
