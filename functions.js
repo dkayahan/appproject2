@@ -76,7 +76,7 @@ function getCorpus(authors){
 */
 function tokenizer(data){
 	return data.
-		replace(/(~|`|!|@|#|$|%|^|&|\*|\(|\)|{|}|\[|\]|;|:|\"|'|<|,|\.|>|\?|\/|\\|\||-|_|\+|=)/g,' $1 ').
+		replace(/(~|`|!|@|#|$|%|^|&|\*|\(|\)|{|}|\[|\]|;|:|\"|'|<|,|\.|>|\?|\/|\\|\||-|_|\+|=)/g,' ').
 		replace(/\s\s+/g, ' '). //Replace new lines, whitespaces into single whitespace
 		split(' ');
 }
