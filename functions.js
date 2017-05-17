@@ -279,7 +279,7 @@ function createSVMData(){
 	download(result, "testFeats.txt","text/plain", "downloadTestFeat");
 	var result2 = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.train);	
 	download(result2, "trainFeats.txt","text/plain", "downloadTrainFeat");
-	download(JSON.stringify(vocabulary.vocArray),"vocabulary.txt","text/plain", "downloadVocabulary");
+	download(JSON.stringify(corpus.authorList),"authorList.txt","text/plain", "downloadAuthorList");
 } 
 
 
