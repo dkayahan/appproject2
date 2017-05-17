@@ -125,6 +125,9 @@ function setWordCounts(authors){
 		authors[author].uniqueWordCount = Object.keys(authors[author]["wordProbs"]).length;		
 	}
 
+	//Bonus
+	vocObj["averageWordCount"] = 1; //Save bonus feature to vocabulary
+
 	//set vocabulary
 	var vocArray = new Array(); 
 	var vocId = 1;//Start from 1. index
@@ -198,11 +201,11 @@ function runNaiveTest(corpus, authors){
 * authors is used to get author id
 * searches dataset
 */
-function getFeatureSet(vocabulary, authors, dataset){
+function getFeatureSet(vocabulary, authorList, dataset){
 	var result = "";
 	for(var i=0; i<dataset.length; i++){
 		var docTokenized = tokenizer(dataset[i].content);
-		var authorId = authors.indexOf(dataset[i].author);
+		var authorId = authorList.indexOf(dataset[i].author);
 		result += authorId;
 		var tmpFeats = new Object();
 		for(var j=0; j<docTokenized.length; j++){
@@ -214,6 +217,14 @@ function getFeatureSet(vocabulary, authors, dataset){
 				tmpFeats[vocId] = 1;
 			}
 		}
+		
+		//Bonus
+		var bonusFeat = authors[dataset[i].author].totalWordCount / authors[dataset[i].author].train.length; //Average word count for a document
+		if(docTokenized.length + 50 >= bonusFeat && docTokenized.length - 50 <= bonusFeat){
+			vocId = vocabulary["averageWordCount"];
+			tmpFeats[vocId] = 1;
+		}
+
 		for(var f in tmpFeats)
 			result += " " + f + ":1";
 		result += "\n";
