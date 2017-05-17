@@ -1,0 +1,3 @@
+Run this command below:
+
+python analysis.py -p ex1/predictions_no_punc1 -t ex1/testFeats.txt -c ex1/authorList.txt
