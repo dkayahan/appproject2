@@ -189,7 +189,7 @@ function runNaiveTest(corpus, authors){
 	}
 	console.log("Num of accurate prediction: ",suc);
 	download(JSON.stringify(authors),"naiveResults.txt","text/plain", "downloadNaive");
-	document.getElementById("navRes").innerHTML = "Num of accurate prediction: " + suc;
+	document.getElementById("navRes").innerHTML = "Number of accurate predictions: " + suc;
 
 }
 
