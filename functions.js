@@ -76,7 +76,7 @@ function getCorpus(authors){
 */
 function tokenizer(data){
 	return data.
-		replace(/(~|`|!|@|#|$|%|^|&|\*|\(|\)|{|}|\[|\]|;|:|\"|'|<|,|\.|>|\?|\/|\\|\||-|_|\+|=)/g,' ').
+		replace(/(~|`|!|@|#|$|%|^|&|\*|\(|\)|{|}|\[|\]|;|:|\"|'|<|,|\.|>|\?|\/|\\|\||-|_|\+|=)/g,' $1 ').
 		replace(/\s\s+/g, ' '). //Replace new lines, whitespaces into single whitespace
 		split(' ');
 }
@@ -188,6 +188,8 @@ function runNaiveTest(corpus, authors){
 			suc++;
 	}
 	console.log("Num of accurate prediction: ",suc);
+	download(JSON.stringify(authors),"naiveResults.txt","text/plain", "downloadNaive");
+	document.getElementById("navRes").innerHTML = "Num of accurate prediction: " + suc;
 
 }
 
@@ -219,48 +221,92 @@ function getFeatureSet(vocabulary, authors, dataset){
 	return result;
 }
 
+function displayTrainTestDocs(corpus, authors){
+	document.getElementById("dataSet").innerHTML = "";
+	var tb = document.createElement("table");
+	var tr = document.createElement("tr");
+	var th = document.createElement("th");
+	th.innerHTML = "Order";
+	tb.appendChild(th);
+	th = document.createElement("th");
+	th.innerHTML = "Train Documents ("+ corpus.train.length + ")";
+	tb.appendChild(th);
+	th = document.createElement("th");
+	th.innerHTML = "Test Documents ("+ corpus.test.length + ")";
+	tb.appendChild(th);
+	for(var i=0; i<corpus.train.length; i++){
+		var tr = document.createElement("tr");
+		var td = document.createElement("td");
+		td.innerHTML = "<b>"+i+"</b>";
+		tr.appendChild(td);
+		td = document.createElement("td");
+		td.innerHTML = corpus.train[i].path;
+		tr.appendChild(td);
+		td = document.createElement("td");
+		if(typeof corpus.test[i] !== "undefined"){
+			td.innerHTML = corpus.test[i].path;
+		};
+		tr.appendChild(td);
+		tb.appendChild(tr);
+	}
+	document.getElementById("dataSet").appendChild(tb);
+}
+
+function doNaive(){
+	var id = document.getElementById("idForNaive").value;
+	naiveBayes(corpus.test[id], authors);
+	var p = document.createElement("p");
+	p.innerHTML = "&nbsp;<b>Predicted:</b> " + corpus.test[id].predictedAuthor + " ----- <b>Actual:</b> " + corpus.test[id].author + "&nbsp;(<i>Document No:</i>" + id +")";
+	if(corpus.test[id].predictedAuthor == corpus.test[id].author)
+		p.style.color = "green";
+	else
+		p.style.color = "red";
+	document.getElementById("navAuth").appendChild(p);
+}
+
+function downloadWordProbs(){
+	var result = "";
+	for(author in authors){
+		result += author + "\n"
+		result += JSON.stringify(authors[author].wordProbs);
+		result += "\n\n";
+	}
+	download(result,"wordProbs.txt","text/plain", "downloadWords");
+}
+
+function createSVMData(){
+	var result = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.test);	
+	download(result, "testFeats.txt","text/plain", "downloadTestFeat");
+	var result2 = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.train);	
+	download(result2, "trainFeats.txt","text/plain", "downloadTrainFeat");
+	download(JSON.stringify(vocabulary.vocArray),"vocabulary.txt","text/plain", "downloadVocabulary");
+} 
+
 
 function init(){
 	//If new folder is uploaded, regenerate model
 	document.getElementById('authorFiles').addEventListener('change', function(event){
 		readFolder(event, function(response){ //folder is read
-			//console.log("Uploaded folder is read: ", response);
 			var authors = splitTrainData(response);	
 			var corpus = getCorpus(authors);
 			console.log("Corpus: ", corpus);
-			download(JSON.stringify(corpus),"corpus.txt","text/plain", "downloadCorpus");
+			//download(JSON.stringify(corpus),"corpus.txt","text/plain", "downloadCorpus");
 			localStorage.setItem("authors", JSON.stringify(authors)); //Save read data to localstorage for further use
 			init();
 		});
 	}, false);
 
-	var authors = JSON.parse(localStorage.getItem("authors"));
-	var corpus = getCorpus(authors);
-	var vocabulary = setWordCounts(authors);
-	console.log(vocabulary.vocArray.length);
-
-	setWordProbs(authors, vocabulary.vocArray.length);
-	download(JSON.stringify(authors),"authors.txt","text/plain", "downloadAuthors");
-	download(JSON.stringify(vocabulary.vocArray),"vocabulary.txt","text/plain", "downloadVocabulary");
-	download(JSON.stringify(corpus.authorList),"authorList.txt","text/plain", "downloadAuthorList");
-
-	console.log("Authors: ", authors);
-	
-	
-	var result = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.test);	
-	download(result, "testFeats.txt","text/plain", "downloadTestFeat");
-	
-	var result2 = getFeatureSet(vocabulary.vocObj, corpus.authorList, corpus.train);	
-	download(result2, "trainFeats.txt","text/plain", "downloadTrainFeat");
-
-
-
-	//runNaiveTest(corpus, authors);
-	console.log("Corpus: ", corpus);
-	naiveBayes(corpus.test[0], authors);
-	console.log(corpus.test[0]);
-	document.getElementById("result").innerHTML = "";
+	authors = JSON.parse(localStorage.getItem("authors"));
+	if(authors !== null){
+		corpus = getCorpus(authors);
+		vocabulary = setWordCounts(authors);
+		setWordProbs(authors, vocabulary.vocArray.length);
+		displayTrainTestDocs(corpus);
+		console.log("Authors: ", authors);
+		downloadWordProbs();
+	}
 }
+
 
 
 
