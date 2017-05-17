@@ -1,53 +1,33 @@
 import sys
 import io
 import pandas as pd
+import json
 
-class SvmPredictionAnalyzer(object):
-    def __init__(self, prediction_file, test_data_file, class_list_file):
-        self.__class_set = self.__get_class_set(class_list_file) #starts from index 1
-        self.__actual_classes = self.__get_actual_classes(test_data_file)
-        self.__predicted_classes = self.__get_predictions(prediction_file)
+class BayesianPredictionAnalyzer(object):
+    def __init__(self, prediction_result_file):
+        self.__actual_classes = []
+        self.__predicted_classes = []
+        self.__class_set = self.__get_class_set()  # starts from index 1
+        self.__construct_actual_predicted_lists(prediction_result_file)
         self.__actual_predicted_tuples = zip(self.__actual_classes, self.__predicted_classes)
         self.__tp_fp_fn_metrics = {}
         self.__p_r_f_measure_obj = {}
 
-    def __get_class_set(self, class_list_file):
-        class_list = []
-        remove_chars = "[]"
-        try:
-            with io.open(class_list_file, 'r') as content_file:
-                class_list = content_file.read().split(",")
-                class_list = map(lambda elem: elem.strip(remove_chars), class_list)
-        except IOError:
-            print "Prediction results file '{}' is not found!".format(class_list_file)
-            sys.exit(2)
+    def __get_class_set(self):
+        class_list = set()
+        for a_class in self.__actual_classes:
+            class_list.add(a_class)
         return class_list
 
-    def __get_predictions(self, prediction_file):
-        predicted_classes = []
+    def __construct_actual_predicted_lists(self, prediction_file):
         try:
-            with io.open(prediction_file, 'r') as content_file:
-                for line in content_file:
-                    line = line.rstrip('\n')
-                    row_data = line.split()
-                    predicted_classes.append(self.__class_set[int(row_data[0])])
+            with io.open(prediction_file) as data_file:
+                data = json.load(data_file)
+            self.__actual_classes = data["actualClass"]
+            self.__predicted_classes = data["predictedClass"]
         except IOError:
             print "Prediction results file '{}' is not found!".format(prediction_file)
             sys.exit(2)
-        return predicted_classes
-
-    def __get_actual_classes(self, test_data_file):
-        actual_classes = []
-        try:
-            with io.open(test_data_file, 'r') as content_file:
-                for line in content_file:
-                    line = line.rstrip('\n')
-                    row_data = line.split()
-                    actual_classes.append(self.__class_set[int(row_data[0])])
-        except IOError:
-            print "Test data file '{}' is not found!".format(test_data_file)
-            sys.exit(2)
-        return actual_classes
 
     def __generate_tp_fp_fn_metrics(self):
         metrics = {}
@@ -159,5 +139,3 @@ class SvmPredictionAnalyzer(object):
         str_val += "\tRecall: {recall}\n".format(recall=macro_recall)
         str_val += "\tF-Measure: {f_measure}\n".format(f_measure=macro_f_measure)
         return str_val
-
-
