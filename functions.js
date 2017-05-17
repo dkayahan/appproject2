@@ -185,18 +185,17 @@ function naiveBayes(inputDocument, authors){
 
 function runNaiveTest(corpus, authors){
 	var suc = 0;
-	var resultObj = {actualClass: new Array(), predicatedClass: new Array()};
+	var resultObj = {actualClass: new Array(), predictedClass: new Array()};
 	for(var i=0; i<corpus.test.length; i++){
 		naiveBayes(corpus.test[i], authors);
 		resultObj.actualClass.push(corpus.test[i].author);
-		resultObj.predicatedClass.push(corpus.test[i].predictedAuthor);
+		resultObj.predictedClass.push(corpus.test[i].predictedAuthor);
 		if(corpus.test[i].author == corpus.test[i].predictedAuthor)
 			suc++;
 	}
 	console.log("Num of accurate prediction: ",suc);
 	download(JSON.stringify(resultObj),"naiveResults.txt","text/plain", "downloadNaive");
 	document.getElementById("navRes").innerHTML = "Number of accurate predictions: " + suc;
-
 }
 
 /**
